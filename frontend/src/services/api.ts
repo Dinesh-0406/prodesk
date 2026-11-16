@@ -48,7 +48,11 @@ let refreshing: Promise<string | null> | null = null;
 
 export async function refreshStaffToken(): Promise<string | null> {
   if (!refreshing) {
-    refreshing = fetch(`${BASE}/api/v1/auth/refresh`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" } })
+    refreshing = fetch(`${BASE}/api/v1/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "true" },
+    })
       .then(async (r) => (r.ok ? ((await r.json()) as { access_token: string }).access_token : null))
       .catch(() => null)
       .finally(() => {
@@ -89,7 +93,9 @@ export async function request<T>(path: string, opts: RequestOptions = {}, retrie
     if (demoData !== null) return demoData;
   }
 
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    "ngrok-skip-browser-warning": "true",
+  };
   if (token) headers.Authorization = `Bearer ${token}`;
   let body: BodyInit | undefined;
   if (opts.form) body = opts.form;
