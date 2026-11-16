@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-feature-settings: "cv11", "ss01", "ss02", "tnum";
+  }
+
+  html {
+    font-feature-settings: var(--font-feature-settings);
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color-scheme: light;
+  }
+
+  body {
+    @apply bg-[#f8faf9] text-ink-900 selection:bg-brand-100 selection:text-brand-900;
+  }
+
+  code, kbd, samp, pre {
+    @apply font-mono;
+  }
+
+  /* Custom subtle scrollbars for dense data workspaces */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-ink-200/80 hover:bg-ink-300;
+  }
+}
+
+@layer utilities {
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  .surface-subtle {
+    @apply bg-ink-50/60 border border-ink-200/80;
+  }
+}

@@ -1,0 +1,277 @@
+from enum import StrEnum
+
+
+class OrgStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    SUSPENDED = "SUSPENDED"
+
+
+class ClientType(StrEnum):
+    INDIVIDUAL = "INDIVIDUAL"
+    PROPRIETORSHIP = "PROPRIETORSHIP"
+    PARTNERSHIP = "PARTNERSHIP"
+    LLP = "LLP"
+    COMPANY = "COMPANY"
+    TRUST = "TRUST"
+    OTHER = "OTHER"
+
+
+class ClientStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    ARCHIVED = "ARCHIVED"
+
+
+class DocumentType(StrEnum):
+    ITR_ACKNOWLEDGEMENT = "ITR_ACKNOWLEDGEMENT"
+    ITR_COMPUTATION = "ITR_COMPUTATION"
+    BALANCE_SHEET = "BALANCE_SHEET"
+    PROFIT_LOSS = "PROFIT_LOSS"
+    GST_RETURN = "GST_RETURN"
+    GST_CERTIFICATE = "GST_CERTIFICATE"
+    TDS_DOCUMENT = "TDS_DOCUMENT"
+    AUDIT_REPORT = "AUDIT_REPORT"
+    INVOICE = "INVOICE"
+    RECEIPT = "RECEIPT"
+    PAN = "PAN"
+    AADHAAR = "AADHAAR"
+    BANK_STATEMENT = "BANK_STATEMENT"
+    OTHER = "OTHER"
+
+
+class DocumentStatus(StrEnum):
+    UPLOADED = "UPLOADED"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    DELIVERED = "DELIVERED"
+    ARCHIVED = "ARCHIVED"
+
+
+class VersionStatus(StrEnum):
+    UPLOADED = "UPLOADED"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    SUPERSEDED = "SUPERSEDED"
+
+
+class DocumentSource(StrEnum):
+    STAFF = "STAFF"
+    CLIENT_PORTAL = "CLIENT_PORTAL"
+    WHATSAPP = "WHATSAPP"
+
+
+class DeliveryStatus(StrEnum):
+    PENDING = "PENDING"
+    SENT = "SENT"
+    DELIVERED = "DELIVERED"
+    READ = "READ"
+    DOWNLOADED = "DOWNLOADED"
+    FAILED = "FAILED"
+
+
+class TaskStatus(StrEnum):
+    NEW_REQUEST = "NEW_REQUEST"
+    DOCUMENTS_PENDING = "DOCUMENTS_PENDING"
+    DOCUMENTS_RECEIVED = "DOCUMENTS_RECEIVED"
+    WORK_IN_PROGRESS = "WORK_IN_PROGRESS"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    FILED = "FILED"
+    COMPLETED = "COMPLETED"
+    DELIVERED = "DELIVERED"
+
+
+TASK_DONE_STATUSES = {TaskStatus.COMPLETED, TaskStatus.DELIVERED}
+
+
+class TaskPriority(StrEnum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    URGENT = "URGENT"
+
+
+class ServiceType(StrEnum):
+    ITR = "ITR"
+    GST = "GST"
+    TDS = "TDS"
+    AUDIT = "AUDIT"
+    ROC = "ROC"
+    ACCOUNTING = "ACCOUNTING"
+    ADVISORY = "ADVISORY"
+    OTHER = "OTHER"
+
+
+class DocumentRequestStatus(StrEnum):
+    PENDING = "PENDING"
+    PARTIAL = "PARTIAL"
+    COMPLETE = "COMPLETE"
+    OVERDUE = "OVERDUE"
+    CANCELLED = "CANCELLED"
+
+
+class RequestItemStatus(StrEnum):
+    PENDING = "PENDING"
+    RECEIVED = "RECEIVED"
+
+
+class InvoiceStatus(StrEnum):
+    DRAFT = "DRAFT"
+    SENT = "SENT"
+    PARTIALLY_PAID = "PARTIALLY_PAID"
+    PAID = "PAID"
+    OVERDUE = "OVERDUE"
+    CANCELLED = "CANCELLED"
+
+
+class PaymentStatus(StrEnum):
+    CREATED = "CREATED"
+    CAPTURED = "CAPTURED"
+    FAILED = "FAILED"
+    REFUNDED = "REFUNDED"
+
+
+class PaymentAttemptStatus(StrEnum):
+    CREATED = "CREATED"
+    PAID = "PAID"
+    FAILED = "FAILED"
+    EXPIRED = "EXPIRED"
+
+
+class MessageDirection(StrEnum):
+    INBOUND = "INBOUND"
+    OUTBOUND = "OUTBOUND"
+
+
+class MessageType(StrEnum):
+    TEXT = "TEXT"
+    TEMPLATE = "TEMPLATE"
+    DOCUMENT = "DOCUMENT"
+    IMAGE = "IMAGE"
+    INTERACTIVE = "INTERACTIVE"
+    BUTTON = "BUTTON"
+    UNSUPPORTED = "UNSUPPORTED"
+
+
+class MessageStatus(StrEnum):
+    QUEUED = "QUEUED"
+    SENT = "SENT"
+    DELIVERED = "DELIVERED"
+    READ = "READ"
+    FAILED = "FAILED"
+    RECEIVED = "RECEIVED"
+
+
+class MessageSender(StrEnum):
+    CLIENT = "CLIENT"
+    BOT = "BOT"
+    AGENT = "AGENT"
+    SYSTEM = "SYSTEM"
+
+
+class HandoverState(StrEnum):
+    BOT = "BOT"
+    HUMAN_REQUESTED = "HUMAN_REQUESTED"
+    AGENT_ASSIGNED = "AGENT_ASSIGNED"
+    HUMAN_ACTIVE = "HUMAN_ACTIVE"
+    BOT_RESUMED = "BOT_RESUMED"
+
+
+HUMAN_MODES = {HandoverState.HUMAN_REQUESTED, HandoverState.AGENT_ASSIGNED, HandoverState.HUMAN_ACTIVE}
+
+
+class ConversationStatus(StrEnum):
+    OPEN = "OPEN"
+    CLOSED = "CLOSED"
+
+
+class TemplateKey(StrEnum):
+    DOCUMENT_READY = "DOCUMENT_READY"
+    DOCUMENT_REQUEST = "DOCUMENT_REQUEST"
+    DOCUMENT_REMINDER = "DOCUMENT_REMINDER"
+    PAYMENT_REMINDER = "PAYMENT_REMINDER"
+    INVOICE_CREATED = "INVOICE_CREATED"
+    TASK_COMPLETED = "TASK_COMPLETED"
+    WELCOME = "WELCOME"
+    OTP = "OTP"
+    HUMAN_HANDOFF = "HUMAN_HANDOFF"
+
+
+class TemplateStatus(StrEnum):
+    NOT_SUBMITTED = "NOT_SUBMITTED"
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    PAUSED = "PAUSED"
+    DISABLED = "DISABLED"
+
+
+class TemplateCategory(StrEnum):
+    UTILITY = "UTILITY"
+    MARKETING = "MARKETING"
+    AUTHENTICATION = "AUTHENTICATION"
+
+
+class WebhookStatus(StrEnum):
+    RECEIVED = "RECEIVED"
+    PROCESSING = "PROCESSING"
+    PROCESSED = "PROCESSED"
+    FAILED = "FAILED"
+    IGNORED = "IGNORED"
+
+
+class WhatsAppAccountStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    INACTIVE = "INACTIVE"
+    ERROR = "ERROR"
+
+
+class NotificationChannel(StrEnum):
+    IN_APP = "IN_APP"
+    EMAIL = "EMAIL"
+    WHATSAPP = "WHATSAPP"
+    SMS = "SMS"
+
+
+class NotificationStatus(StrEnum):
+    PENDING = "PENDING"
+    SENT = "SENT"
+    FAILED = "FAILED"
+    READ = "READ"
+
+
+class ComplianceCategory(StrEnum):
+    GST = "GST"
+    ITR = "ITR"
+    TDS = "TDS"
+    ADVANCE_TAX = "ADVANCE_TAX"
+    ROC = "ROC"
+    AUDIT = "AUDIT"
+    CUSTOM = "CUSTOM"
+
+
+class ComplianceSource(StrEnum):
+    ADMIN_CONFIGURED = "ADMIN_CONFIGURED"
+    VERIFIED_SOURCE = "VERIFIED_SOURCE"
+    OFFICIAL_INTEGRATION = "OFFICIAL_INTEGRATION"
+
+
+class SupportRequestType(StrEnum):
+    CALLBACK = "CALLBACK"
+    APPOINTMENT = "APPOINTMENT"
+    QUERY = "QUERY"
+    DOCUMENT_UPLOAD = "DOCUMENT_UPLOAD"
+
+
+class SupportRequestStatus(StrEnum):
+    OPEN = "OPEN"
+    IN_PROGRESS = "IN_PROGRESS"
+    RESOLVED = "RESOLVED"
+
+
+class JobStatus(StrEnum):
+    QUEUED = "QUEUED"
+    RUNNING = "RUNNING"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    RETRYING = "RETRYING"

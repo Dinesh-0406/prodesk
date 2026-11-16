@@ -1,0 +1,42 @@
+[project]
+name = "prodesk-backend"
+version = "1.0.0"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 140
+target-version = "py312"
+extend-exclude = ["migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S", "SIM", "RUF"]
+ignore = [
+  "S101",   # assert used for invariants
+  "B008",   # FastAPI Depends/File in defaults
+  "RUF012", # mutable class attrs (SQLAlchemy/Celery)
+  "S105", "S106",  # false positives on "token" names
+  "SIM108",
+  "RUF001", "RUF002", "RUF003",  # unicode punctuation in UI strings
+  "UP040", "UP046", "UP047",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B011", "E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]
+addopts = "-ra"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.mypy]
+python_version = "3.12"
+plugins = []
+ignore_missing_imports = true
+warn_unused_ignores = false
+check_untyped_defs = true
+disallow_untyped_defs = false
+no_implicit_optional = true
+exclude = ["migrations/", "tests/"]
+# SQLAlchemy result rows are inferred loosely without the (deprecated) SQLAlchemy mypy plugin
+disable_error_code = ["var-annotated"]
