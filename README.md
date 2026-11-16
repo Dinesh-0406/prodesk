@@ -1,5 +1,11 @@
 # ProDesk
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/Dinesh-0406/prodesk)
+
+* **Live Frontend (Vercel):** [https://prodesk-ca.vercel.app](https://prodesk-ca.vercel.app)
+* **Live Client Portal (Vercel):** [https://prodesk-ca.vercel.app/portal/login](https://prodesk-ca.vercel.app/portal/login)
+* **GitHub Repository:** [https://github.com/Dinesh-0406/prodesk](https://github.com/Dinesh-0406/prodesk)
+
 **Practice management and client automation for Indian CA firms, with WhatsApp as the main client channel.**
 
 ProDesk handles the repetitive client work a CA firm does every day: collecting documents, delivering finished work, follow-ups, status questions, invoices and payment reminders. WhatsApp (the official Meta Cloud API) is how clients interact with it. The ProDesk database is always the source of truth, and the AI layer only classifies requests. It never decides who can see what, and it never invents facts.
