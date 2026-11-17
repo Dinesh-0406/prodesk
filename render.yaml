@@ -35,7 +35,9 @@ services:
         value: production
       - key: RUN_MIGRATIONS
         value: "1"
-      - key: SEED_DEMO_DATA
+      - key: SEED_DEMO_DATA # the seed command refuses to run in production and would stop the container
+        value: "0"
+      - key: WEB_CONCURRENCY # free plan has 512 MB RAM
         value: "1"
       - key: CELERY_TASK_ALWAYS_EAGER
         value: "true"
