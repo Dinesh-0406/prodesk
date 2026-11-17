@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_TTL_DAYS: int = 14
     CLIENT_SESSION_TTL_MINUTES: int = 60
     SIGNED_URL_TTL_SECONDS: int = 300
+    WHATSAPP_MEDIA_URL_TTL_SECONDS: int = 600  # link Meta downloads a document from when sending it as a file
+    WHATSAPP_IDENTITY_TTL_MINUTES: int = 30  # how long an OTP-verified chat on another number stays verified
     DELIVERY_LINK_TTL_HOURS: int = 72
     OTP_TTL_SECONDS: int = 300
     OTP_MAX_ATTEMPTS: int = 5

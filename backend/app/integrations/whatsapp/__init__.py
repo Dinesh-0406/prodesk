@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from app.core.config import settings
 from app.core.security import decrypt_secret
 from app.integrations.whatsapp.base import (
+    ListRow,
+    ListSection,
     SendResult,
     TemplateComponentParams,
     WAErrorCategory,
@@ -44,6 +46,8 @@ def app_secret_for(account: WhatsAppAccount | None) -> str:
 
 
 __all__ = [
+    "ListRow",
+    "ListSection",
     "SendResult",
     "TemplateComponentParams",
     "WAErrorCategory",

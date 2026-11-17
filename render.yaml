@@ -56,6 +56,8 @@ services:
         value: "https://prodesk-ca.vercel.app,https://prodesk-firm.vercel.app,https://frontend-theta-gold-89.vercel.app"
       - key: FRONTEND_URL
         value: "https://prodesk-ca.vercel.app"
+      - key: PUBLIC_API_URL # Meta downloads WhatsApp document files from this host
+        value: "https://prodesk-api.onrender.com"
       - key: REFRESH_COOKIE_SECURE
         value: "true"
       - key: STORAGE_PROVIDER

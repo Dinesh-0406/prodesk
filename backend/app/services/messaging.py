@@ -24,7 +24,7 @@ from app.core.permissions import Perm
 from app.core.phone import to_wa_id
 from app.core.rate_limit import hit
 from app.core.security import now_utc
-from app.integrations.whatsapp import TemplateComponentParams, WAErrorCategory, get_whatsapp_provider
+from app.integrations.whatsapp import ListRow, ListSection, TemplateComponentParams, WAErrorCategory, get_whatsapp_provider
 from app.models import Client, Conversation, DocumentDelivery, Message, Organization, WhatsAppAccount, WhatsAppContact
 from app.models.enums import (
     ConversationStatus,
@@ -63,6 +63,11 @@ class Outbound:
     link: str | None = None
     file_name: str | None = None
     buttons: list[tuple[str, str]] = field(default_factory=list)
+    # Interactive list message: [{"title": str, "rows": [{"id", "title", "description"}]}]
+    list_sections: list[dict[str, Any]] = field(default_factory=list)
+    list_button: str | None = None
+    # Document sent as a file: the signed URL is minted at send time, never stored.
+    version_id: uuid.UUID | None = None
     bypass_opt_in: bool = False  # user-requested transactional (OTP)
 
 
@@ -198,6 +203,11 @@ def queue_message(
         "buttons": spec.buttons,
         "text": spec.body,
     }
+    if spec.list_sections:
+        payload["list_sections"] = spec.list_sections
+        payload["list_button"] = spec.list_button or "View options"
+    if spec.version_id:
+        payload["version_id"] = str(spec.version_id)
     if spec.template_key == TemplateKey.OTP:
         payload["sensitive"] = True
     msg = Message(
@@ -271,7 +281,24 @@ def agent_reply(db: Session, principal: Principal, conversation: Conversation, b
     return msg
 
 
-def _dispatch(provider: Any, msg: Message, tpl_name: str | None, tpl_lang: str) -> Any:
+def _document_link(db: Session, msg: Message) -> str:
+    """Short-lived signed URL for a document sent as a WhatsApp file. Meta fetches it right away,
+    so it is minted per attempt and never persisted."""
+    from app.models import DocumentVersion
+    from app.models.enums import VersionStatus
+    from app.services.documents import signed_url_for_version
+
+    p = msg.payload or {}
+    if not p.get("version_id"):
+        return str(p["link"])
+    version = db.get(DocumentVersion, uuid.UUID(p["version_id"]))
+    if version is None or version.organization_id != msg.organization_id or version.status != VersionStatus.APPROVED:
+        raise ValueError("Document version is no longer available")
+    url, _ = signed_url_for_version(version, inline=False, ttl=settings.WHATSAPP_MEDIA_URL_TTL_SECONDS)
+    return url
+
+
+def _dispatch(db: Session, provider: Any, msg: Message, tpl_name: str | None, tpl_lang: str) -> Any:
     p = msg.payload or {}
     kind = MessageType(msg.message_type)
     to = msg.recipient or ""
@@ -285,9 +312,19 @@ def _dispatch(provider: Any, msg: Message, tpl_name: str | None, tpl_lang: str) 
             TemplateComponentParams(body=[str(x) for x in p.get("params", [])], url_button_suffix=p.get("url_suffix")),
         )
     if kind == MessageType.DOCUMENT:
-        return provider.send_document(to, link=p["link"], file_name=p.get("file_name") or "document", caption=msg.body)
+        return provider.send_document(to, link=_document_link(db, msg), file_name=p.get("file_name") or "document", caption=msg.body)
     if kind == MessageType.IMAGE:
         return provider.send_image(to, link=p["link"], caption=msg.body)
+    if kind == MessageType.INTERACTIVE and p.get("list_sections"):
+        sections = [
+            ListSection(
+                title=sec.get("title", ""),
+                rows=[ListRow(id=r["id"], title=r["title"], description=r.get("description")) for r in sec.get("rows", [])],
+            )
+            for sec in p["list_sections"]
+        ]
+        button = p.get("list_button") or "View options"
+        return provider.send_interactive_list(to, body=msg.body or "", button_text=button, sections=sections)
     if kind == MessageType.INTERACTIVE:
         return provider.send_interactive_message(to, body=msg.body or "", buttons=[tuple(b) for b in p.get("buttons", [])])
     raise ValueError(f"Unsupported outbound type {kind}")
@@ -309,7 +346,7 @@ def send_queued_message(db: Session, message_id: uuid.UUID) -> Message:
     err_text = ""
     try:
         provider = get_whatsapp_provider(account)
-        result = _dispatch(provider, msg, tpl.name if tpl else None, tpl.language if tpl else "en")
+        result = _dispatch(db, provider, msg, tpl.name if tpl else None, tpl.language if tpl else "en")
     except Exception as e:
         log.exception("whatsapp_send_exception")
         result = None

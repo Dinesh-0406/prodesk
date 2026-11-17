@@ -71,7 +71,7 @@ All business logic lives in `backend/app/services`. Each external system sits be
 | Auth | JWT access tokens (15 min) and rotating refresh tokens (httpOnly cookie, reuse detection), Argon2 hashing, client OTP |
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, TanStack Query, React Router |
 | Integrations | Meta WhatsApp Cloud API, Razorpay, OpenAI, AWS S3, SMTP (each with a mock) |
-| Quality | Ruff, mypy, pytest (98 tests); ESLint, tsc, Vitest (14 tests) |
+| Quality | Ruff, mypy, pytest (118 tests); ESLint, tsc, Vitest (14 tests) |
 
 ## Folder structure
 

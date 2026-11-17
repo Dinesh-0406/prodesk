@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from datetime import UTC, date, datetime, timedelta
 
 from conftest import Firm, last_outbound, make_pdf
@@ -29,11 +28,13 @@ def test_core_end_to_end_scenario(api, db):
     assert len(sent) == 1 and sent[0]["to"] == "919876543210"
     token = sent[0]["url_suffix"].removeprefix("link/")
     assert client["name"] in sent[0]["body_params"]
-    # Client also requests the document over WhatsApp → backend identifies client → link generated
+    # Client also requests the document over WhatsApp → backend identifies client → file sent in the chat
+    OUTBOX.clear()
     firm.inbound(client["phone"], "Mujhe ITR acknowledgement bhejo")
-    reply = last_outbound(db, firm.org_id, "Open it securely")
-    assert reply is not None
-    link_token = re.search(r"/portal/link/([\w\-]+)", reply.body).group(1)
+    files = [m for m in OUTBOX.messages if m["type"] == "document"]
+    assert len(files) == 1 and files[0]["to"] == "919876543210" and files[0]["file_name"] == "ITR-V_FY2025-26.pdf"
+    assert api.get(files[0]["link"].replace("http://testserver", "")).content == content
+    link_token = token
     # Client opens secure link: public info reveals nothing about the document
     info = api.get(f"/api/v1/portal/link/{link_token}").json()
     assert info["org_slug"] == firm.slug and "ITR" not in str(info) and info["phone_hint"].endswith("3210")

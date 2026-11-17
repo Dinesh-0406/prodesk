@@ -17,6 +17,8 @@ from typing import Any
 from app.core.errors import NotFound
 from app.core.logging import get_logger
 from app.integrations.whatsapp.base import (
+    LIST_MAX_ROWS,
+    ListSection,
     MediaDownload,
     SendResult,
     TemplateComponentParams,
@@ -90,6 +92,10 @@ class MockWhatsAppProvider(WhatsAppProvider):
 
     def send_interactive_message(self, to: str, *, body: str, buttons: list[tuple[str, str]]) -> SendResult:
         return self._ok("interactive", to, body=body, buttons=buttons[:3])
+
+    def send_interactive_list(self, to: str, *, body: str, button_text: str, sections: list[ListSection]) -> SendResult:
+        rows = [{"id": r.id, "title": r.title[:24], "description": r.description} for sec in sections for r in sec.rows]
+        return self._ok("interactive_list", to, body=body, button=button_text[:20], rows=rows[:LIST_MAX_ROWS])
 
     def mark_as_read(self, provider_message_id: str) -> SendResult:
         return SendResult(ok=True, raw={"mock": True})

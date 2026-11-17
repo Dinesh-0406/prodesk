@@ -21,7 +21,7 @@ from app.integrations.ai.base import ClientIntent, ClientIntentName
 from app.models import Client, Conversation, Organization
 from app.models.enums import SupportRequestType, TaskStatus
 from app.services.assistant import tools
-from app.services.delivery import DOC_LABELS, create_delivery, portal_link
+from app.services.delivery import DOC_LABELS
 from app.services.tasks import STATUS_LABELS
 
 log = get_logger("assistant.client")
@@ -47,7 +47,8 @@ class AssistantReply:
     intent: ClientIntent
     actions: list[str] = field(default_factory=list)
     handoff: bool = False
-    delivery: Any = None
+    document: Any = None  # send this approved Document as a WhatsApp file
+    documents: list[Any] | None = None  # show these as a pick list
 
 
 def _fmt_date(d: Any) -> str:
@@ -57,7 +58,7 @@ def _fmt_date(d: Any) -> str:
 def _menu(org_name: str) -> str:
     return (
         f"I'm the {org_name} assistant. I can help you with:\n"
-        '• Your ITR / GST / work status\n• Getting your documents (e.g. "send last year\'s balance sheet")\n'
+        '• Your ITR / GST / work status\n• Getting your documents (type "documents", or e.g. "send last year\'s balance sheet")\n'
         "• Pending documents you need to send\n• Invoices and pending payments\n"
         '• Uploading a document (just send the file here)\n• Talking to the CA team ("CA se baat karni hai")'
     )
@@ -146,13 +147,8 @@ def _get_document(
     db: Session, ctx: tools.ToolContext, intent: ClientIntent, org: Organization, client: Client, conv: Conversation, text: str
 ) -> AssistantReply:
     if intent.document_type is None:
-        docs = tools.list_client_documents(db, ctx, limit=8)
-        if not docs:
-            return AssistantReply(text="No documents have been shared with you yet.", intent=intent)
-        lines = ["Which document do you need? Available:"] + [
-            f"• {DOC_LABELS.get(d.document_type, d.document_type)}" + (f" FY {d.financial_year}" if d.financial_year else "") for d in docs
-        ]
-        return AssistantReply(text="\n".join(lines), intent=intent)
+        docs = tools.list_client_documents(db, ctx, limit=10)
+        return AssistantReply(text="Here are your documents.", intent=intent, documents=docs)
     doc = tools.get_document(
         db, ctx, document_type=intent.document_type.value, financial_year=intent.financial_year, relative_year=intent.relative_year
     )
@@ -166,15 +162,11 @@ def _get_document(
             intent=intent,
             actions=["support_request"],
         )
-    version = next(v for v in doc.versions if v.id == doc.approved_version_id)
-    delivery, raw = create_delivery(db, doc, version, initiated_by=None)
     return AssistantReply(
-        delivery=delivery,
-        text=f"Here is your {label}"
-        + (f" for FY {doc.financial_year}" if doc.financial_year else "")
-        + f". Open it securely (you'll verify with an OTP):\n{portal_link(raw)}",
+        document=doc,
+        text=f"Sending your {label}" + (f" for FY {doc.financial_year}" if doc.financial_year else "") + ".",
         intent=intent,
-        actions=["delivery_link"],
+        actions=["document_file"],
     )
 
 

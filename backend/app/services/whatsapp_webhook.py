@@ -154,6 +154,16 @@ def process_event(db: Session, event_id: uuid.UUID) -> None:
         raise
 
 
+def _reply_id(m: dict[str, Any]) -> str | None:
+    """Row/button id of an interactive reply (e.g. 'doc:<uuid>' from the document list)."""
+    if m.get("type") != "interactive":
+        return None
+    i = m.get("interactive") or {}
+    reply = i.get("list_reply") or i.get("button_reply") or {}
+    rid = reply.get("id")
+    return str(rid)[:200] if rid else None
+
+
 def _text_of(m: dict[str, Any]) -> tuple[MessageType, str | None]:
     t = m.get("type")
     if t == "text":
@@ -249,13 +259,16 @@ def _handle_inbound(db: Session, acc: WhatsAppAccount, m: dict[str, Any], contac
 
     org = db.get(Organization, org_id)
     assert org is not None
+    from app.services.assistant import document_bot
+
+    if mtype not in (MessageType.DOCUMENT, MessageType.IMAGE) and document_bot.handle(
+        db, org=org, conv=conv, registered=client, text=text, reply_id=_reply_id(m)
+    ):
+        return
+    # The client this chat speaks for: the registered number's client, or one verified by OTP.
+    client = document_bot.acting_client(db, conv, client)
     if client is None:
-        _reply(
-            db,
-            org_id,
-            conv,
-            f"Hello! This number is not registered with {org.name}. Please contact the office to link your WhatsApp number.",
-        )
+        document_bot.prompt_identity(db, org, conv)
         return
 
     if mtype in (MessageType.DOCUMENT, MessageType.IMAGE):
@@ -273,9 +286,12 @@ def _handle_inbound(db: Session, acc: WhatsAppAccount, m: dict[str, Any], contac
         request_handover(db, conv, reason=text or "Client requested a human")
     if conv.handover_state == "BOT_RESUMED":
         conv.handover_state = "BOT"
-    out = _reply(db, org_id, conv, reply.text, preview_url="http" in reply.text)
-    if reply.delivery is not None:
-        reply.delivery.message_id = out.id  # delivery timestamps follow this message's status webhooks
+    if reply.document is not None:
+        document_bot.send_document_file(db, org, conv, client, reply.document)
+    elif reply.documents is not None:
+        document_bot.send_document_menu(db, org, conv, client, reply.documents)
+    else:
+        _reply(db, org_id, conv, reply.text, preview_url="http" in reply.text)
 
 
 def _reply(db: Session, org_id: uuid.UUID, conv: Conversation, text: str, *, preview_url: bool = False) -> Message:

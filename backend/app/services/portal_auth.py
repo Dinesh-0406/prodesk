@@ -21,6 +21,7 @@ from app.services import audit, messaging
 from app.services.audit import AuditAction
 
 log = get_logger(__name__)
+PORTAL_PURPOSE = "PORTAL_LOGIN"
 GENERIC_MSG = "If this number is registered with the firm, a verification code has been sent on WhatsApp."
 
 
@@ -60,11 +61,16 @@ def request_otp(db: Session, *, org_slug: str, phone: str, ip: str) -> OtpReques
     if org is None or client is None:
         return OtpRequestResult(message=GENERIC_MSG)  # no enumeration of registered numbers
     code = generate_otp(6)
-    db.execute(update(ClientOtp).where(ClientOtp.client_id == client.id, ClientOtp.consumed_at.is_(None)).values(consumed_at=now_utc()))
+    db.execute(
+        update(ClientOtp)
+        .where(ClientOtp.client_id == client.id, ClientOtp.purpose == PORTAL_PURPOSE, ClientOtp.consumed_at.is_(None))
+        .values(consumed_at=now_utc())
+    )
     db.add(
         ClientOtp(
             organization_id=org.id,
             client_id=client.id,
+            purpose=PORTAL_PURPOSE,
             code_hash=hash_token(f"{client.id}:{code}"),
             expires_at=now_utc() + timedelta(seconds=settings.OTP_TTL_SECONDS),
         )
@@ -93,7 +99,7 @@ def verify_otp(db: Session, *, org_slug: str, phone: str, code: str, ip: str) ->
     otp = (
         db.execute(
             select(ClientOtp)
-            .where(ClientOtp.client_id == client.id, ClientOtp.consumed_at.is_(None))
+            .where(ClientOtp.client_id == client.id, ClientOtp.purpose == PORTAL_PURPOSE, ClientOtp.consumed_at.is_(None))
             .order_by(ClientOtp.created_at.desc())
             .with_for_update()
         )

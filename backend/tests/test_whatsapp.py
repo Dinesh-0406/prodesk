@@ -54,7 +54,7 @@ def test_unknown_number_gets_generic_reply(api, firm: Firm, db):
     r = send_webhook(api, firm.phone_number_id, "919999999999", "Mera ITR status kya hai?")
     assert r.status_code == 200
     reply = last_outbound(db, firm.org_id)
-    assert "not registered" in reply.body
+    assert "registered name" in reply.body
     assert "ITR" not in reply.body
 
 

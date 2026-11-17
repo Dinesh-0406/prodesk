@@ -49,6 +49,22 @@ class TemplateComponentParams:
 
 
 @dataclass
+class ListRow:
+    id: str  # max 200 chars
+    title: str  # max 24 chars
+    description: str | None = None  # max 72 chars
+
+
+@dataclass
+class ListSection:
+    title: str  # max 24 chars
+    rows: list[ListRow] = field(default_factory=list)
+
+
+LIST_MAX_ROWS = 10
+
+
+@dataclass
 class MediaDownload:
     content: bytes
     mime_type: str
@@ -73,6 +89,10 @@ class WhatsAppProvider(ABC):
     @abstractmethod
     def send_interactive_message(self, to: str, *, body: str, buttons: list[tuple[str, str]]) -> SendResult:
         """Reply buttons: list of (id, title), max 3 per Meta's rules."""
+
+    @abstractmethod
+    def send_interactive_list(self, to: str, *, body: str, button_text: str, sections: list[ListSection]) -> SendResult:
+        """List message: up to 10 rows in total across sections (Meta's limit)."""
 
     @abstractmethod
     def mark_as_read(self, provider_message_id: str) -> SendResult: ...

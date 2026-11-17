@@ -10,6 +10,8 @@ import httpx
 from app.core.errors import ProviderError
 from app.core.logging import get_logger
 from app.integrations.whatsapp.base import (
+    LIST_MAX_ROWS,
+    ListSection,
     MediaDownload,
     SendResult,
     TemplateComponentParams,
@@ -148,6 +150,26 @@ class MetaWhatsAppProvider(WhatsAppProvider):
                         "buttons": [{"type": "reply", "reply": {"id": bid[:256], "title": title[:20]}} for bid, title in buttons[:3]]
                     },
                 },
+            }
+        )
+
+    def send_interactive_list(self, to: str, *, body: str, button_text: str, sections: list[ListSection]) -> SendResult:
+        out, budget = [], LIST_MAX_ROWS
+        for sec in sections:
+            rows = []
+            for r in sec.rows[:budget]:
+                row: dict[str, Any] = {"id": r.id[:200], "title": r.title[:24]}
+                if r.description:
+                    row["description"] = r.description[:72]
+                rows.append(row)
+            budget -= len(rows)
+            if rows:
+                out.append({"title": sec.title[:24], "rows": rows})
+        return self._post_message(
+            {
+                "to": to,
+                "type": "interactive",
+                "interactive": {"type": "list", "body": {"text": body[:4096]}, "action": {"button": button_text[:20], "sections": out}},
             }
         )
 

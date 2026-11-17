@@ -87,7 +87,24 @@ Errors are handled without breaking the flow:
 | Expired or invalid token (190) | Account → ERROR, admins notified |
 | Network or 5xx | Retried (up to 6 attempts) |
 
-## 9. Policy awareness built in
+## 9. Document desk chatbot
+
+Clients can fetch their finished documents themselves, any time, by chatting with the firm's number:
+
+```
+Client: I am Abhishek Sahu            (or "Mera naam … hai", or their mobile number)
+Bot:    [list] Balance Sheet · FY 2025-26 / Profit & Loss Statement · FY 2025-26 / ITR Acknowledgement …
+Client: (taps Balance Sheet)
+Bot:    [PDF file] Balance Sheet — FY 2025-26
+```
+
+- **Who is the client?** A message from a client's registered number identifies them directly. A name or number typed from any *other* number triggers a 6-digit code sent to the client's **registered** number (OTP template); the chat speaks for that client only after the code is typed back, for `WHATSAPP_IDENTITY_TTL_MINUTES` (default 30). The bot's reply is the same whether or not the name matched, so it cannot be used to discover who is a client. Name matching tolerates honorifics and small spelling differences; a name shared by several clients asks for the mobile number instead.
+- **What is listed?** Only that client's approved documents, newest first, as a WhatsApp list message (Meta allows 10 rows; older documents can be requested by name, e.g. "Balance sheet 2022-23"). Clients can also type "documents" or ask for one directly ("send last year's balance sheet").
+- **How is it sent?** As a WhatsApp document message. The worker mints a signed download URL at send time (`WHATSAPP_MEDIA_URL_TTL_SECONDS`, default 600) and Meta fetches the file from it, so `PUBLIC_API_URL` (or S3) must be reachable from the internet. Each send creates a `WHATSAPP_FILE` delivery, follows sent/delivered/read ticks, and is audit-logged.
+- **Limits:** name/number claims are rate-limited per chat (6 per hour) and codes per client (3 per 10 minutes); wrong codes count towards `OTP_MAX_ATTEMPTS`.
+- Proactive "document ready" notifications after approval still use the `DOCUMENT_READY` template with the OTP-protected portal link, because a business-initiated message cannot carry a file outside the 24-hour window.
+
+## 10. Policy awareness built in
 
 - **Opt-in:** business-initiated templates require a recorded opt-in. Staff record it when creating the client, by CSV, or through a consent entry, and every change is written to `consent_records`.
 - **Opt-out:** a client sending `STOP` (or "unsubscribe", "band karo") is opted out at once and gets one confirmation; `START` re-subscribes. Opted-out clients receive nothing else, including reminders.
@@ -95,7 +112,7 @@ Errors are handled without breaking the flow:
 - **Message categories and cost:** Utility, Authentication and Marketing templates are billed differently by Meta, and business-initiated messages are not free. ProDesk sends only Utility and Authentication templates by default and never sends marketing. Check Meta's current pricing for India.
 - **Reminders:** frequency, maximum count, quiet hours (firm timezone) and per-slot de-duplication all apply, to avoid spamming clients.
 
-## 10. Production checklist
+## 11. Production checklist
 
 - [ ] Business verification done, display name approved, phone number registered on Cloud API
 - [ ] System-user token with `whatsapp_business_messaging` + `whatsapp_business_management`
@@ -105,13 +122,13 @@ Errors are handled without breaking the flow:
 - [ ] *Test connection* in Settings succeeds
 - [ ] Send a test document to a staff member's own number and confirm delivered/read ticks arrive
 
-## 11. Local testing
+## 12. Local testing
 
 - `WHATSAPP_PROVIDER=mock` (the default) needs no Meta account. Outbound messages get fake `wamid.MOCK…` IDs and appear in the inbox. A template whose name starts with `rejected_` simulates a Meta rejection.
 - **WhatsApp → Simulate client message** in the dashboard builds a Meta-format payload, signs it with `WHATSAPP_APP_SECRET`, and sends it through the real ingest → queue → worker path (development only).
 - To test against real Meta from a laptop, expose the API with an HTTPS tunnel, use that URL as the callback, and use Meta's test number.
 
-## 12. Environment variables
+## 13. Environment variables
 
 | Variable | Purpose |
 |---|---|
@@ -123,3 +140,5 @@ Errors are handled without breaking the flow:
 | `WHATSAPP_APP_SECRET` | Webhook signature validation |
 | `WHATSAPP_API_VERSION` | Graph API version, e.g. `v21.0` (check Meta's changelog and keep it current) |
 | `WHATSAPP_SEND_RATE_PER_MINUTE` | Per-firm send throttle |
+| `WHATSAPP_MEDIA_URL_TTL_SECONDS` | Lifetime of the signed URL Meta downloads a document file from (default 600) |
+| `WHATSAPP_IDENTITY_TTL_MINUTES` | How long a chat verified by OTP from another number stays verified (default 30) |
