@@ -13,8 +13,9 @@ venv/
 .ruff_cache/
 .coverage
 htmlcov/
+# uploaded-file folders only (not the app.integrations.storage code package)
+/storage/
 backend/storage/
-storage/
 celerybeat-schedule*
 
 # Node
